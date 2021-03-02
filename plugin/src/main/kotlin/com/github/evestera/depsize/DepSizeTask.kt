@@ -2,10 +2,12 @@ package com.github.evestera.depsize
 
 import org.gradle.api.DefaultTask
 import org.gradle.api.artifacts.Configuration
-import org.gradle.api.file.FileCollection
+import org.gradle.api.artifacts.ResolvedArtifact
+import org.gradle.api.artifacts.ResolvedDependency
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.options.Option
+import kotlin.collections.ArrayDeque
 
 open class DepSizeTask : DefaultTask() {
     init {
@@ -18,9 +20,10 @@ open class DepSizeTask : DefaultTask() {
     var configuration: String = "runtimeClasspath"
 
     private val allDependencies = "*all-dependencies*"
+
     @field:Option(description = "Which dependency (with children) to calculate size of (default: all dependencies)")
     @get:Input
-    var dependency: String? = allDependencies
+    var dependency: String = allDependencies
 
     @TaskAction
     fun printDependencySizes() {
@@ -28,25 +31,56 @@ open class DepSizeTask : DefaultTask() {
 
         var out = "\nConfiguration name: \"${config.name}\"\n"
 
-        var fileCollection: FileCollection = config
+        var artifacts: Iterable<ResolvedArtifact> = config.resolvedConfiguration.resolvedArtifacts
         if (dependency != allDependencies) {
-            fileCollection = config.fileCollection { it.name == dependency }
+            val newRoot = searchDependencyTree(config.resolvedConfiguration.firstLevelModuleDependencies) {
+                it.moduleName == dependency
+            }
+            if (newRoot == null) {
+                out += "Unable to find dependency with name $dependency"
+                println(out)
+                return
+            }
+            artifacts = newRoot.allModuleArtifacts
             out += "Showing only $dependency (with children)\n\n"
         }
 
-        val size = fileCollection.map { it.length() / (1024.0 * 1024.0) }.sum()
+        val size = artifacts.map { it.file.length() / (1024.0 * 1024.0) }.sum()
 
         if (size > 0) {
             out += "Total dependencies size:".padEnd(65)
             out += "%,10.2f MB\n\n".format(size)
 
-            for (dependencyFile in fileCollection.sortedBy { -it.length() }) {
-                out += dependencyFile.name.padEnd(65)
-                out += "%,10.2f KB\n".format(dependencyFile.length() / 1024.0)
+            for (artifact in artifacts.sortedBy { -it.file.length() }) {
+                out += artifact.file.name.padEnd(65)
+                out += "%,10.2f KB\n".format(artifact.file.length() / 1024.0)
             }
         } else {
             out += "No dependencies found"
         }
         println(out)
+    }
+
+    private fun searchDependencyTree(
+        dependencies: Set<ResolvedDependency>,
+        predicate: (ResolvedDependency) -> Boolean
+    ): ResolvedDependency? {
+        val seen = mutableSetOf<String>()
+        val queue = ArrayDeque(dependencies)
+
+        while (!queue.isEmpty()) {
+            val dependency = queue.removeFirst()
+            if (predicate(dependency)) {
+                return dependency
+            }
+            seen.add(dependency.moduleName)
+            dependency.children.forEach {
+                if (!seen.contains(it.moduleName)) {
+                    queue.addLast(it)
+                }
+            }
+        }
+
+        return null
     }
 }

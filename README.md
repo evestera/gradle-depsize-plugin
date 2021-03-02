@@ -14,7 +14,7 @@ See [plugin page on plugins.gradle.org][plugin-page].
 gradle depsize [--configuration <configurationName>] [--dependency <dependencyName>]
 ```
 
-
+Task help:
 
 ```
 gradle help --task depsize
@@ -48,8 +48,7 @@ listenablefuture-9999.0-empty-to-avoid-conflict-with-guava.jar         2.15 KB
 
 ### Filtering
 
-Note: Currently only dependencies listed as direct dependencies will be
-recognized. Use dependency name without group.
+Use dependency name without group.
 
 E.g. showing only `guava` from the above
 (from `implementation("com.google.guava:guava:29.0-jre")` in the `build.gradle.kts`)
