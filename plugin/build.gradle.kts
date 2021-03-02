@@ -6,7 +6,7 @@ plugins {
 }
 
 group = "com.github.evestera"
-version = "0.1-SNAPSHOT"
+version = "0.1.0-SNAPSHOT"
 
 repositories {
     mavenCentral()
@@ -32,7 +32,10 @@ pluginBundle {
     website = "https://github.com/evestera/gradle-depsize-plugin"
     vcsUrl = "https://github.com/evestera/gradle-depsize-plugin"
     tags = listOf("dependency", "size", "task")
-    description = """Plugin that adds a task "depsize" which calculates and shows dependency sizes."""
+    description = """
+        Plugin that adds a task "depsize" which calculates and shows dependency sizes.
+        For further documentation, see github repository.
+        """.trimIndent()
 
     (plugins) {
         "depsize" {
