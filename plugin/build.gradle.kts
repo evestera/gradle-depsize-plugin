@@ -1,7 +1,12 @@
 plugins {
     `java-gradle-plugin`
     id("org.jetbrains.kotlin.jvm") version "1.4.20"
+    `maven-publish`
+    id("com.gradle.plugin-publish") version "0.13.0"
 }
+
+group = "com.github.evestera"
+version = "0.1-SNAPSHOT"
 
 repositories {
     mavenCentral()
@@ -15,26 +20,37 @@ dependencies {
 }
 
 gradlePlugin {
-    val depsize by plugins.creating {
-        id = "com.github.evestera.depsize"
-        implementationClass = "com.github.evestera.depsize.DepSizePlugin"
+    plugins {
+        create("depsize") {
+            id = "com.github.evestera.depsize"
+            implementationClass = "com.github.evestera.depsize.DepSizePlugin"
+        }
     }
 }
 
-// Add a source set for the functional test suite
-val functionalTestSourceSet = sourceSets.create("functionalTest") {
+pluginBundle {
+    website = "https://github.com/evestera/gradle-depsize-plugin"
+    vcsUrl = "https://github.com/evestera/gradle-depsize-plugin"
+    tags = listOf("dependency", "size", "task")
+    description = """Plugin that adds a task "depsize" which calculates and shows dependency sizes."""
+
+    (plugins) {
+        "depsize" {
+            displayName = "Dependency Size Listing plugin"
+        }
+    }
 }
+
+val functionalTestSourceSet = sourceSets.create("functionalTest")
 
 gradlePlugin.testSourceSets(functionalTestSourceSet)
 configurations["functionalTestImplementation"].extendsFrom(configurations["testImplementation"])
 
-// Add a task to run the functional tests
 val functionalTest by tasks.registering(Test::class) {
     testClassesDirs = functionalTestSourceSet.output.classesDirs
     classpath = functionalTestSourceSet.runtimeClasspath
 }
 
 tasks.check {
-    // Run the functional tests as part of `check`
     dependsOn(functionalTest)
 }

@@ -5,7 +5,7 @@ import org.gradle.testkit.runner.GradleRunner
 import kotlin.test.Test
 import kotlin.test.assertTrue
 
-class DepsizePluginFunctionalTest {
+class DepSizePluginFunctionalTest {
     @Test
     fun `can run task`() {
         // Setup the test build

@@ -7,30 +7,31 @@ import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.options.Option
 
-open class DepSizeTask: DefaultTask() {
+open class DepSizeTask : DefaultTask() {
     init {
         group = "help"
         description = "Calculate size of dependencies"
     }
 
-    @field:Option(description = "Which configuration")
+    @field:Option(description = "Which configuration to use (default: runtimeClasspath)")
     @get:Input
-    var configuration: String = "default"
+    var configuration: String = "runtimeClasspath"
 
-    @field:Option(description = "Which dependency (with children)")
+    private val allDependencies = "*all-dependencies*"
+    @field:Option(description = "Which dependency (with children) to calculate size of (default: all dependencies)")
     @get:Input
-    var artifact: String? = "all"
+    var dependency: String? = allDependencies
 
     @TaskAction
-    fun printDepSize() {
+    fun printDependencySizes() {
         val config: Configuration = project.configurations.getByName(configuration)
 
         var out = "\nConfiguration name: \"${config.name}\"\n"
 
         var fileCollection: FileCollection = config
-        if (artifact != "all") {
-            fileCollection = config.fileCollection { it.name == artifact }
-            out += "Showing only $artifact (with children)\n\n"
+        if (dependency != allDependencies) {
+            fileCollection = config.fileCollection { it.name == dependency }
+            out += "Showing only $dependency (with children)\n\n"
         }
 
         val size = fileCollection.map { it.length() / (1024.0 * 1024.0) }.sum()
