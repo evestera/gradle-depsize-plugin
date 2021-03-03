@@ -47,12 +47,14 @@ open class DepSizeTask : DefaultTask() {
 
         val size = artifacts.map { it.file.length() / (1024.0 * 1024.0) }.sum()
 
+        val padding = maxOf(artifacts.maxOf { it.file.name.length }, 25)
+
         if (size > 0) {
-            out += "Total dependencies size:".padEnd(65)
+            out += "Total dependencies size:".padEnd(padding)
             out += "%,10.2f MB\n\n".format(size)
 
             for (artifact in artifacts.sortedBy { -it.file.length() }) {
-                out += artifact.file.name.padEnd(65)
+                out += artifact.file.name.padEnd(padding)
                 out += "%,10.2f KB\n".format(artifact.file.length() / 1024.0)
             }
         } else {
