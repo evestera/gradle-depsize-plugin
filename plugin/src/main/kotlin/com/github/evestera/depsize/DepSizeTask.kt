@@ -31,7 +31,7 @@ open class DepSizeTask : DefaultTask() {
 
         var out = "\nConfiguration name: \"${config.name}\"\n"
 
-        var artifacts: Iterable<ResolvedArtifact> = config.resolvedConfiguration.resolvedArtifacts
+        var artifacts: Collection<ResolvedArtifact> = config.resolvedConfiguration.resolvedArtifacts
         if (dependency != allDependencies) {
             val newRoot = searchDependencyTree(config.resolvedConfiguration.firstLevelModuleDependencies) {
                 it.moduleName == dependency
@@ -45,21 +45,24 @@ open class DepSizeTask : DefaultTask() {
             out += "Showing only $dependency (with children)\n\n"
         }
 
+        if (artifacts.isEmpty()) {
+            out += "No dependencies found"
+            println(out)
+            return
+        }
+
         val size = artifacts.map { it.file.length() / (1024.0 * 1024.0) }.sum()
 
         val padding = maxOf(artifacts.maxOf { it.file.name.length }, 25)
 
-        if (size > 0) {
-            out += "Total dependencies size:".padEnd(padding)
-            out += "%,10.2f MB\n\n".format(size)
+        out += "Total dependencies size:".padEnd(padding)
+        out += "%,10.2f MB\n\n".format(size)
 
-            for (artifact in artifacts.sortedBy { -it.file.length() }) {
-                out += artifact.file.name.padEnd(padding)
-                out += "%,10.2f KB\n".format(artifact.file.length() / 1024.0)
-            }
-        } else {
-            out += "No dependencies found"
+        for (artifact in artifacts.sortedBy { -it.file.length() }) {
+            out += artifact.file.name.padEnd(padding)
+            out += "%,10.2f KB\n".format(artifact.file.length() / 1024.0)
         }
+
         println(out)
     }
 
