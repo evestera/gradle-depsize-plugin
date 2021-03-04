@@ -5,6 +5,6 @@ import org.gradle.api.Project
 
 class DepSizePlugin : Plugin<Project> {
     override fun apply(project: Project) {
-        project.tasks.create("depsize", DepSizeTask::class.java)
+        project.tasks.register("depsize", DepSizeTask::class.java)
     }
 }
